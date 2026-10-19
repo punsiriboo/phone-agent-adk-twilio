@@ -6,6 +6,9 @@ Call flow:
   2. Twilio opens the WebSocket at /twilio/stream. The token in the `start`
      message is checked, then the call runs through run_call.
   3. When the socket closes, Twilio moves on to <Hangup/> and the call ends.
+
+With ENABLE_WEB_CLIENT=true, /web also serves a browser test client
+(frontend/) that talks to the same agent without a phone.
 """
 
 import asyncio
@@ -14,13 +17,17 @@ import hmac
 import json
 import logging
 import os
+import uuid
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request, Response, WebSocket
 from fastapi import WebSocketDisconnect
+from fastapi.staticfiles import StaticFiles
 from starlette.websockets import WebSocketState
 from twilio.request_validator import RequestValidator
 from twilio.twiml.voice_response import Connect, VoiceResponse
 
+from .browser_stream import BrowserCall
 from .live_messaging import run_call
 from .twilio_stream import TwilioCall
 
@@ -30,9 +37,14 @@ log = logging.getLogger(__name__)
 TWILIO_AUTH_TOKEN = os.environ["TWILIO_AUTH_TOKEN"]
 # Set when behind a proxy that rewrites the host, e.g. https://agent.example.com
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")
+# Off by default: the web client is unauthenticated, so anyone could run up
+# Gemini usage on a public deployment.
+ENABLE_WEB_CLIENT = os.getenv("ENABLE_WEB_CLIENT", "").lower() == "true"
 
 VOICE_PATH = "/twilio/voice"
 STREAM_PATH = "/twilio/stream"
+WEB_PATH = "/web"
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 START_TIMEOUT_SECONDS = 10
 
 validator = RequestValidator(TWILIO_AUTH_TOKEN)
@@ -146,3 +158,30 @@ async def twilio_connect(websocket: WebSocket) -> None:
         if websocket.client_state == WebSocketState.CONNECTED:
             await websocket.close()
         log.info("call %s: ended", call_sid)
+
+
+# --- Browser test client -----------------------------------------------------
+
+if ENABLE_WEB_CLIENT:
+
+    # Registered before the mount below, which would otherwise catch /web/ws.
+    @app.websocket(WEB_PATH + "/ws")
+    async def web_connect(websocket: WebSocket) -> None:
+        """Runs one browser test call through the ADK live agent."""
+        await websocket.accept()
+        call_id = "web-" + uuid.uuid4().hex[:8]
+        log.info("web call %s: started", call_id)
+        call = BrowserCall(websocket, call_id)
+        try:
+            await run_call(
+                user_id=call_id,
+                session_id=call_id,
+                client_to_agent=call.client_to_agent,
+                on_agent_event=call.on_agent_event,
+            )
+        finally:
+            if websocket.client_state == WebSocketState.CONNECTED:
+                await websocket.close()
+            log.info("web call %s: ended", call_id)
+
+    app.mount(WEB_PATH, StaticFiles(directory=FRONTEND_DIR, html=True), name="web")

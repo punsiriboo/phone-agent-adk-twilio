@@ -1,1 +1,1 @@
-web: uvicorn phone_agent.main:app --host 0.0.0.0 --port $PORT
+web: uvicorn adk_agent.main:app --host 0.0.0.0 --port $PORT

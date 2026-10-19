@@ -25,6 +25,9 @@ def text_to_content(text: str, role: Literal["user", "model"] = "user") -> Conte
 
 APP_NAME = "THE VOICE AGENT"
 
+# Sent as the first user turn so the agent speaks first, like answering a phone.
+GREETING_PROMPT = "The caller has just picked up. Greet them briefly."
+
 # Gemini Live audio formats: 16-bit mono PCM.
 AGENT_INPUT_RATE = 16000
 AGENT_OUTPUT_RATE = 24000

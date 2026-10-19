@@ -10,10 +10,12 @@ caller ─ Twilio ─ POST /twilio/voice ──> TwiML <Connect><Stream>
 
 | File | Role |
 |---|---|
-| `phone_agent/agent.py` | `root_agent`: Live model, voice, tools (`google_search`, `end_call`) |
-| `phone_agent/live_messaging.py` | `RunConfig`, `run_live` session, ADK events → `AgentEvent`, `run_call` lifecycle |
-| `phone_agent/twilio_stream.py` | Twilio protocol: μ-law codec and resampling, barge-in (`clear`), hang-up after goodbye (`mark`) |
-| `phone_agent/main.py` | FastAPI: signed webhook + `twilio_connect` WebSocket |
+| `adk_agent/agent.py` | `root_agent`: Live model, voice, tools (`google_search`, `end_call`) |
+| `adk_agent/live_messaging.py` | `RunConfig`, `run_live` session, ADK events → `AgentEvent`, `run_call` lifecycle |
+| `adk_agent/twilio_stream.py` | Twilio protocol: μ-law codec and resampling, barge-in (`clear`), hang-up after goodbye (`mark`) |
+| `adk_agent/main.py` | FastAPI: signed webhook + `twilio_connect` WebSocket, optional `/web` test client |
+| `adk_agent/browser_stream.py` | Browser protocol for the test client: PCM in/out, transcripts, barge-in, hang-up |
+| `frontend/` | Browser test client (mic → 16 kHz PCM worklet, 24 kHz playback) |
 
 ## Run locally
 
@@ -22,12 +24,15 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env          # fill in GOOGLE_API_KEY, TWILIO_AUTH_TOKEN
 ngrok http 8080               # put the https URL in PUBLIC_BASE_URL
-uvicorn phone_agent.main:app --port 8080
+uvicorn adk_agent.main:app --port 8080
 ```
 
 In the Twilio console, set the number's **A call comes in** webhook to `POST https://<PUBLIC_BASE_URL>/twilio/voice`.
 
-Try the agent without a phone: `adk web .` and pick `phone_agent`.
+Try the agent without a phone:
+
+- `ENABLE_WEB_CLIENT=true uvicorn adk_agent.main:app --port 8080`, then open http://localhost:8080/web/. It runs the same `run_call` as phone calls. Use headphones.
+- Or `adk web .` and pick `adk_agent`.
 
 Tests (Gemini is stubbed, no keys needed): `pip install pytest httpx && python -m pytest`.
 

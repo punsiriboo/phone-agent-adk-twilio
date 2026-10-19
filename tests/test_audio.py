@@ -1,6 +1,6 @@
 import numpy as np
 
-from phone_agent import twilio_stream
+from adk_agent import twilio_stream
 
 
 def test_decode_matches_g711_reference_points():

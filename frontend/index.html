@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Phone Agent Test</title>
+  <style>
+    :root {
+      --bg: #f7f7f5;
+      --surface: #ffffff;
+      --text: #1d1d1b;
+      --muted: #6b6b66;
+      --border: #e2e2dc;
+      --accent: #2f6fde;
+      --agent: #2f6fde;
+      --user: #1d1d1b;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #151514;
+        --surface: #1f1f1d;
+        --text: #ececea;
+        --muted: #9a9a94;
+        --border: #33332f;
+        --accent: #6f9dff;
+        --agent: #8fb3ff;
+        --user: #ececea;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 32px 16px;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+      display: flex;
+      justify-content: center;
+    }
+    main { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 20px; }
+    header h1 { margin: 0; font-size: 20px; }
+    header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+
+    .controls { display: flex; align-items: center; gap: 14px; }
+    .dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: var(--border); flex: none;
+    }
+    body[data-state="connecting"] .dot { background: #d9a300; }
+    body[data-state="listening"] .dot { background: #2e9d5b; animation: pulse 1.6s ease-in-out infinite; }
+    body[data-state="speaking"] .dot { background: var(--accent); animation: pulse 0.8s ease-in-out infinite; }
+    @keyframes pulse { 50% { transform: scale(1.4); opacity: 0.6; } }
+    #status { flex: 1; color: var(--muted); }
+
+    button {
+      padding: 10px 20px;
+      border: 1px solid var(--accent);
+      border-radius: 999px;
+      background: var(--accent);
+      color: #fff;
+      font: inherit;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.5; cursor: default; }
+
+    #transcript {
+      min-height: 240px;
+      max-height: 60vh;
+      overflow-y: auto;
+      padding: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    #transcript:empty::before { content: "Transcript appears here."; color: var(--muted); }
+    .line { margin: 0 0 10px; }
+    .line::before { display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+    .line.user::before { content: "You"; }
+    .line.agent::before { content: "Agent"; }
+    .line.user { color: var(--user); }
+    .line.agent { color: var(--agent); }
+  </style>
+</head>
+<body data-state="idle">
+  <main>
+    <header>
+      <h1>Phone agent test</h1>
+      <p>Talks to the same ADK agent as phone calls. Use headphones so it doesn't hear itself.</p>
+    </header>
+    <div class="controls">
+      <span class="dot" aria-hidden="true"></span>
+      <span id="status">Ready</span>
+      <button id="call">Start call</button>
+    </div>
+    <div id="transcript" aria-live="polite"></div>
+  </main>
+  <script src="main.js"></script>
+</body>
+</html>

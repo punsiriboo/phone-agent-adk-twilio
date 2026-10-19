@@ -17,6 +17,7 @@ from google.adk.agents.live_request_queue import LiveRequestQueue
 from .live_messaging import (
     AGENT_INPUT_RATE,
     AGENT_OUTPUT_RATE,
+    GREETING_PROMPT,
     AgentDataEvent,
     AgentEvent,
     AgentHangUpEvent,
@@ -32,8 +33,6 @@ TWILIO_RATE = 8000
 
 # Sent as a mark after the goodbye audio; Twilio echoes it back once played.
 HANGUP_MARK = "end_call"
-
-GREETING_PROMPT = "The caller has just picked up. Greet them briefly."
 
 
 # --- G.711 μ-law <-> 16-bit PCM, vectorised with lookup tables ---------------
