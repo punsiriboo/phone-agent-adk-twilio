@@ -1,0 +1,8 @@
+.git
+.gitignore
+.gcloudignore
+.env
+.venv
+.adk
+**/__pycache__
+tests

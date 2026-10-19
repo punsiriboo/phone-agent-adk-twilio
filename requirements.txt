@@ -1,0 +1,8 @@
+google-adk>=2.8.0
+fastapi
+uvicorn[standard]
+python-multipart
+python-dotenv
+twilio>=9,<10
+numpy
+soxr
